@@ -14,6 +14,13 @@ module.exports = {
 
     },
     configureWebpack: (config) => {
+      config.resolve = {//配置解析别名
+        extensions:['.js','.json','.vue'],
+        alias:{
+          '@':path.resolve(__dirname,'./src'),
+          '@c':path.resolve(__dirname,'./src/components')
+        }
+      }
 
     },
     // vue-loader 配置项
