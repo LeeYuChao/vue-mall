@@ -11,6 +11,7 @@
                 >{{item.txt}}</li>
             </ul>
             <!-- 表单 start -->
+            <i class="fa fa-camera-retro"></i>
             <el-form
                 :model="ruleForm"
                 status-icon
@@ -69,14 +70,41 @@
 
 <script>
 //引入相关组件
-import {
-    filterStr,
-    validateEmall,
-    validatePassword,
-    validateCode
-} from "@/utils/validate.js";
+import { reactive,ref } from "@vue/composition-api"
+import { filterStr,validateEmall,validatePassword,validateCode } from "@/utils/validate.js";
 export default {
     name: "login",
+    setup(props,context){
+        //这里面放置data数据，生命周期，自定义的函数
+        const menuTab = reactive([
+            { txt: "登录", current: true,type:'login' },
+            { txt: "注册", current: false,type:'register' }
+        ])
+        //模块值
+        const model = ref('login')
+        /**
+         * 声明函数
+         */
+        const toggleMenu = (e => {//vue 数据驱动视图渲染
+            //初始化菜单数组
+            menuTab.forEach(element => {
+                element.current = false;
+            });
+            //将选中的值进行高光渲染
+            e.current = true;
+            model.value = e.type;
+        })
+        const submitForm = (formName => {
+            this.$refs[formName].validate(valid => {
+                if (valid) {
+                    alert("submit!");
+                } else {
+                    console.log("error submit!!");
+                    return false;
+                }
+            });
+        })
+    },
     data() {
         //验证用户名
         var CheckUsername = (rule, value, callback) => {
@@ -126,12 +154,10 @@ export default {
             }
         };
         return {
-            menuTab: [
-                { txt: "登录", current: true,type:'login' },
-                { txt: "注册", current: false,type:'register' }
-            ],
-            //模块值
-            model: 'login',
+            menuTab,
+            model,
+            toggleMenu,
+            submitForm,
             ruleForm: {
                 username: "", //用户名邮箱
                 password: "", //用户密码
@@ -150,26 +176,7 @@ export default {
     mounted() {},
     // 写函数的地方
     methods: {
-        //vue 数据驱动视图渲染
-        toggleMenu(e) {
-            //初始化菜单数组
-            this.menuTab.forEach(element => {
-                element.current = false;
-            });
-            //将选中的值进行高光渲染
-            e.current = true;
-            this.model = e.type;
-        },
-        submitForm(formName) {
-            this.$refs[formName].validate(valid => {
-                if (valid) {
-                    alert("submit!");
-                } else {
-                    console.log("error submit!!");
-                    return false;
-                }
-            });
-        }
+       
     }
 };
 </script>

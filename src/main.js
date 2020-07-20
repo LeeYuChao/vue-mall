@@ -1,12 +1,16 @@
 import Vue from "vue";
 import App from "./App.vue";
 import store from "./store";
+// CSS相关引入
+import 'font-awesome/css/font-awesome.min.css' ;
+import 'element-ui/lib/theme-chalk/index.css';
+import VueCompositionApi from "@vue/composition-api";
 //引入路由页面
 import router from "./router/index";
 //引入 ElementUI
 import ElementUI from 'element-ui';
-import 'element-ui/lib/theme-chalk/index.css';
 
+Vue.use(VueCompositionApi)
 Vue.use(ElementUI);
 
 Vue.config.productionTip = false;
