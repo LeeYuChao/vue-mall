@@ -59,8 +59,7 @@ module.exports = {
     https: false,//编译失败时刷新页面
     hot: true,//开启热加载
     hotOnly: false,
-    proxy: null, // 设置代理
-    proxy: {
+    proxy: {// 设置代理
       '/devApi': {
         // 此处的写法，目的是为了 将 /api 替换成 https://www.baidu.com/
         target: 'http://www.web-jshtml.cn/api',
