@@ -11,7 +11,6 @@
                 >{{item.txt}}</li>
             </ul>
             <!-- 表单 start -->
-            <i class="fa fa-camera-retro"></i>
             <el-form
                 :model="ruleForm"
                 status-icon
@@ -51,7 +50,7 @@
                             <el-input v-model.number="ruleForm.code" maxlength="6" minlength="6"></el-input>
                         </el-col>
                         <el-col :span="10">
-                            <el-button type="success" class="block">获取验证码</el-button>
+                            <el-button type="success" class="block" @click="getSms()">获取验证码</el-button>
                         </el-col>
                     </el-row>
                 </el-form-item>
@@ -70,47 +69,17 @@
 
 <script>
 //引入相关组件
-import { reactive,ref } from "@vue/composition-api"
+import { GetSms } from '@/api/login.js'
+import { reactive,ref,isRef,toRefs,onMounted } from "@vue/composition-api"
 import { filterStr,validateEmall,validatePassword,validateCode } from "@/utils/validate.js";
 export default {
     name: "login",
     setup(props,context){
-        //这里面放置data数据，生命周期，自定义的函数
-        const menuTab = reactive([
-            { txt: "登录", current: true,type:'login' },
-            { txt: "注册", current: false,type:'register' }
-        ])
-        //模块值
-        const model = ref('login')
-        /**
-         * 声明函数
-         */
-        const toggleMenu = (e => {//vue 数据驱动视图渲染
-            //初始化菜单数组
-            menuTab.forEach(element => {
-                element.current = false;
-            });
-            //将选中的值进行高光渲染
-            e.current = true;
-            model.value = e.type;
-        })
-        const submitForm = (formName => {
-            this.$refs[formName].validate(valid => {
-                if (valid) {
-                    alert("submit!");
-                } else {
-                    console.log("error submit!!");
-                    return false;
-                }
-            });
-        })
-    },
-    data() {
         //验证用户名
-        var CheckUsername = (rule, value, callback) => {
+        let CheckUsername = (rule, value, callback) => {
             //过滤特殊字符
-            this.ruleForm.username = filterStr(value);
-            value = this.ruleForm.username;
+            ruleForm.username = filterStr(value);
+            value = ruleForm.username;
             if (value === "") {
                 callback(new Error("请输入用户名"));
             } else if (validateEmall(value)) {
@@ -120,9 +89,9 @@ export default {
             }
         };
         //验证密码
-        var CheckPassword = (rule, value, callback) => {
-            this.ruleForm.password = filterStr(value);
-            value = this.ruleForm.password;
+        let CheckPassword = (rule, value, callback) => {
+            ruleForm.password = filterStr(value);
+            value = ruleForm.password;
             if (value === "") {
                 callback(new Error("请输入密码"));
             } else if (validatePassword(value)) {
@@ -131,20 +100,22 @@ export default {
                 callback();
             }
         };
-        //验证重复密码
-        var CheckrePassword = (rule, value, callback) => {
-            this.ruleForm.rePassword = filterStr(value);
-            value = this.ruleForm.rePassword;
+        // //验证重复密码
+        let CheckrePassword = (rule, value, callback) => {
+            //如果模块为login,直接通过
+            if(model.value === 'login'){callback();}
+            ruleForm.rePassword = filterStr(value);
+            value = ruleForm.rePassword;
             if (value === "") {
                 callback(new Error("请再次输入密码"));
-            } else if (value != this.ruleForm.password) {
+            } else if (value != ruleForm.password) {
                 callback(new Error("两次密码输入不一致"));
             } else {
                 callback();
             }
         };
-        //验证验证码
-        var CheckCode = (rule, value, callback) => {
+        // //验证验证码
+        let CheckCode = (rule, value, callback) => {
             if (value === "") {
                 return callback(new Error("验证码不能为空"));
             } else if (validateCode(value)) {
@@ -152,25 +123,80 @@ export default {
             } else {
                 callback();
             }
-        };
-        return {
+        }; 
+        /**
+         * 声明数据
+         */
+        //这里面放置data数据，生命周期，自定义的函数
+        const menuTab = reactive([
+            { txt: "登录", current: true,type:'login' },
+            { txt: "注册", current: false,type:'register' }
+        ])
+        //模块值
+        const model = ref('login')
+        //表单绑定数据
+        const ruleForm = reactive({
+            username: "", //用户名邮箱
+            password: "", //用户密码
+            rePassword: "", //重复密码
+            code: "" //验证码
+        })
+        //表单的验证
+        const rules = reactive( {
+            username: [{ validator: CheckUsername, trigger: "blur" }],
+            password: [{ validator: CheckPassword, trigger: "blur" }],
+            rePassword: [{ validator: CheckrePassword, trigger: "blur" }],
+            code: [{ validator: CheckCode, trigger: "blur" }]
+        })
+        /**
+         * 声明函数
+         */
+        const toggleMenu = (e => {//vue 数据驱动视图渲染
+            //初始化菜单数组
+            console.log(e)
+            menuTab.forEach(element => {
+                element.current = false;
+            });
+            //将选中的值进行高光渲染
+            e.current = true;
+            //修改模块值
+            model.value = e.type;
+        })
+        /**
+         * 获取验证码
+         */
+        const getSms = (() => {
+            GetSms()
+        })
+        /**
+         * 提交表单
+         */
+        const submitForm = (formName => {
+            context.refs[formName].validate(valid => {
+                if (valid) {
+                    alert("submit!");
+                } else {
+                    console.log("error submit!!");
+                    return false;
+                }
+            });
+        })
+        /**
+         * 生命周期
+         */
+        //挂载完成后
+        onMounted(() => {
+            // GetSms()
+        })
+        return{
             menuTab,
             model,
+            ruleForm,
+            rules,
             toggleMenu,
             submitForm,
-            ruleForm: {
-                username: "", //用户名邮箱
-                password: "", //用户密码
-                rePassword: "", //重复密码
-                code: "" //验证码
-            },
-            rules: {
-                username: [{ validator: CheckUsername, trigger: "blur" }],
-                password: [{ validator: CheckPassword, trigger: "blur" }],
-                rePassword: [{ validator: CheckrePassword, trigger: "blur" }],
-                code: [{ validator: CheckCode, trigger: "blur" }]
-            }
-        };
+            getSms,
+        }
     },
     created() {},
     mounted() {},
