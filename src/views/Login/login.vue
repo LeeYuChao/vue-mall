@@ -83,12 +83,7 @@
 //引入相关组件
 import { GetSms } from "@/api/login.js";
 import { reactive, ref, isRef, toRefs, onMounted } from "@vue/composition-api";
-import {
-    filterStr,
-    validateEmall,
-    validatePassword,
-    validateCode
-} from "@/utils/validate.js";
+import {filterStr,validateEmall,validatePassword,validateCode} from "@/utils/validate.js";
 export default {
     name: "login",
     setup(props, { refs, root }) {
