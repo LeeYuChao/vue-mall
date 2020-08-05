@@ -55,20 +55,21 @@ module.exports = {
   devServer: {
     open: false,//  process.platform === "darwin"  编译完成是否打开网页
     host: "0.0.0.0",//指定使用地址，默认 localhost,0.0.0.0代表可以被外界访问
+    // host: '127.0.0.1',
     port: 8080,//访问端口
     https: false,//编译失败时刷新页面
     hot: true,//开启热加载
     hotOnly: false,
-    proxy: {// 设置代理
-      '/devApi': {
-        // 此处的写法，目的是为了 将 /api 替换成 https://www.baidu.com/
-        target: 'http://www.web-jshtml.cn/api',
-        // 允许跨域
-        changeOrigin: true,
-        ws: true,
-        pathRewrite: {
-          '^/devApi': ''
-        }
+    proxy: {
+      "/api": {
+          /* 目标代理服务器地址 */
+          target: "http://192.168.31.203:8888", //
+          /* 允许跨域 */
+          changeOrigin: true,
+          ws: false,
+          pathRewrite: {
+              "^/api": "/api"
+          }
       }
     },
     overlay: {//全屏模式下是否显示脚本错误

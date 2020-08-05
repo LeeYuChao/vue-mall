@@ -2,6 +2,8 @@
 
 ### 图标样式等
 图标库采用 Fontawesome 如果需要图表或字体样式，可进入官网 https://fontawesome.dashgame.com/ 学习使用
+### 加密方式等
+加密采用 js-sha1，可进入官网 https://www.npmjs.com/package/js-sha1 学习使用
 
 ### 启动项目
 1、下载安装node.js  
@@ -31,6 +33,8 @@
 >npm install @vue/composition-api --save
 安装 axios
 >npm install  axios
+依赖加密方式
+>npm i js-sha1
 安装依赖
 >npm install
 

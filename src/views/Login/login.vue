@@ -14,7 +14,7 @@
                 :model="ruleForm"
                 status-icon
                 :rules="rules"
-                ref="formName"
+                ref="loginForm"
                 class="login-form"
                 size="medium"
             >
@@ -55,13 +55,13 @@
                         <el-col :span="14">
                             <el-input
                                 id="code"
-                                v-model.number="ruleForm.code"
+                                v-model="ruleForm.code"
                                 maxlength="6"
                                 minlength="6"
                             ></el-input>
                         </el-col>
                         <el-col :span="10">
-                            <el-button type="success" class="block" @click="getSms()">获取验证码</el-button>
+                            <el-button type="success" class="block" :disabled="codeButtonStatus.status" @click="getSms()">{{ codeButtonStatus.text }}</el-button>
                         </el-col>
                     </el-row>
                 </el-form-item>
@@ -69,7 +69,7 @@
                 <el-form-item>
                     <el-button
                         type="danger"
-                        @click="submitForm('ruleForm')"
+                        @click="submitForm('loginForm')"
                         class="login-btn block"
                         :disabled="loginButtonStatus"
                     >{{ model === 'login'?'登录':'注册'}}</el-button>
@@ -81,7 +81,8 @@
 
 <script>
 //引入相关组件
-import { GetSms } from "@/api/login.js";
+import sha1 from "js-sha1";
+import { GetSms,Register,Login } from "@/api/login.js";
 import { reactive, ref, isRef, toRefs, onMounted } from "@vue/composition-api";
 import {filterStr,validateEmall,validatePassword,validateCode} from "@/utils/validate.js";
 export default {
@@ -90,7 +91,7 @@ export default {
         //验证用户名
         let CheckUsername = (rule, value, callback) => {
             //过滤特殊字符
-            ruleForm.username = filterStr(value);
+            // ruleForm.username = filterStr(value);
             value = ruleForm.username;
             if (value === "") {
                 callback(new Error("请输入用户名"));
@@ -150,9 +151,16 @@ export default {
         const model = ref("login");
         //登录按钮禁用状态
         const loginButtonStatus = ref(true);
+        //验证码按钮状态
+        const codeButtonStatus = reactive({ 
+            status: false, 
+            text: '获取验证码'
+        });
+        //倒计时
+        const timer = ref(null);
         //表单绑定数据
         const ruleForm = reactive({
-            username: "", //用户名邮箱
+            username: "123123@qq.com", //用户名邮箱
             password: "", //用户密码
             rePassword: "", //重复密码
             code: "" //验证码
@@ -167,7 +175,8 @@ export default {
         /**
          * 声明函数
          */
-        const toggleMenu = e => {
+        //切换模块
+        const toggleMenu = (e => {
             //vue数据驱动视图渲染
             //初始化菜单数组
             menuTab.forEach(element => {
@@ -177,10 +186,20 @@ export default {
             e.current = true;
             //修改模块值
             model.value = e.type;
-            //重置表单
+            resetFromData()
+            clearCountDown()
+        });
+        //清除表单数据
+        const resetFromData = (() => {
+            //重置表单resetFields
             //2.0写法：this.$refs[formName].resetFields();
-            refs.formName.resetFields();
-        };
+            refs.loginForm.resetFields();
+        });
+        //更新按钮状态
+        const updateButtonStatus = ((params) => {
+            codeButtonStatus.status = params.status;
+            codeButtonStatus.text = params.text;
+        });
         /**
          * 获取验证码
          */
@@ -199,27 +218,123 @@ export default {
                 username: ruleForm.username,
                 model: model.value
             };
-            GetSms(requestData)
-                .then(response => {
-                    console.log(response);
-                })
-                .catch(error => {
+            updateButtonStatus({
+                status:true,
+                text:'发送中'
+            });
+            //请求延时2秒操作
+            setTimeout(() => {
+                GetSms(requestData).then(response => {
+                    let data = response.data;
+                    root.$message({
+                        message:data.message,
+                        type:'success'
+                    })
+                    //请求成功之后，注册按钮可以点击，且按钮进入倒计时
+                    loginButtonStatus.value = false
+                    countDown(6);
+                }).catch(error => {
                     console.log(error);
-                });
+                })
+            }, 2000);
+            loginButtonStatus.value = false
         };
         /**
          * 提交表单
          */
-        const submitForm = formName => {
-            refs[formName].validate(valid => {
+        const submitForm = (formName => {
+             refs[formName].validate((valid) => {
+                //表单验证通过
                 if (valid) {
-                    alert("submit!");
+                    model.value === 'login' ? login() : register()
                 } else {
                     console.log("error submit!!");
                     return false;
                 }
             });
-        };
+        });
+        /**
+         * 登录
+         */
+        const login = (() => {
+            let requestData = {
+                username:ruleForm.username,
+                password:sha1(ruleForm.password),
+                code:ruleForm.code,
+            }
+            //页面跳转
+            root.$router.push({
+                name:'Console'
+            })
+            //发送登录请求
+            Login(requestData).then(response => {
+                console.log(requestData)
+            }).catch(error => {
+                console.log(error)
+            })
+        });
+        /**
+         * 注册
+         */
+        const register = (() => {
+            let requestData = {
+                username:ruleForm.username,
+                password:sha1(ruleForm.password),
+                code:ruleForm.code,
+                module:'register',
+            }
+            //模拟注册成功
+            toggleMenu(menuTab[0]);
+            clearCountDown();
+            //发送注册请求
+            Register(requestData).then(response => {
+                let data = response.data;
+                root.$message({
+                    message:data.message,
+                    type:'success'
+                })
+            //模拟注册成功
+            }).catch(error => {
+                //失败时执行的代码
+                console.log(error)
+            })
+        });
+        /**
+         * 倒计时
+         */
+        const countDown = ((number) => {
+            //判断定时器是否存在，存在则清除
+            if(timer.value){
+                clearInterval(timer.value);
+            }
+            //setTimeout  只执行一次                           setTimeout.clearTimeout(变量)
+            //setInterval 不断的执行，需要满足指定条件才会停止   setInterval.clearTimeout(变量)
+            let time = number;
+            timer.value = setInterval(() => {
+                time--
+                if(time === 0){
+                    clearInterval(timer.value);
+                    updateButtonStatus({
+                        status:false,
+                        text:'重新发送'
+                    });
+                }else{
+                    codeButtonStatus.text = `倒计时${time}秒`;
+                }
+            },1000)
+        });
+        /**
+         * 清除倒计时
+         */
+        const clearCountDown = (() => {
+            //还原验证码按钮默认状态
+            updateButtonStatus({
+                status:false,
+                text:'获取验证码'
+            });
+            //清除倒计时
+            clearInterval(timer.value);
+        });
         /**
          * 生命周期
          */
@@ -236,6 +351,7 @@ export default {
             submitForm,
             getSms,
             loginButtonStatus,
+            codeButtonStatus,
         };
     },
     created() {},
@@ -246,7 +362,7 @@ export default {
 <style lang="scss" scoped>
 //scoped：局部文件有效
 #login {
-    height: 100vh;
+    // height: 100vh;
     background-color: #344a5f;
 }
 .login-warp {
@@ -284,3 +400,20 @@ export default {
     }
 }
 </style>>
+
+<!--
+
+密码加密：
+1、在前端预先加密一次
+登录的密码：123123（普通字符串）
+经过加密后：sha1(123123) == '0c75a603b6b71628c598b1ada10f30ceced89814' (加密后的字符串)
+
+2、后台加密
+接收到字符串：'0c75a603b6b71628c598b1ada10f30ceced89814'
+后台再次加密：md5('0c75a603b6b71628c598b1ada10f30ceced89814') == '457c53b18caf685b5f8ec1c5ac80f9dc'
+最终写入数据库：  '457c53b18caf685b5f8ec1c5ac80f9dc'
+
+3、登录
+用户名与加密后的密码进行匹配，成功则登录，失败则提示
+
+-->
