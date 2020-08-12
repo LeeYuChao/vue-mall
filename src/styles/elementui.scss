@@ -1,0 +1,11 @@
+.el-submenu .el-menu-item{
+    font-size: 14px;
+    padding-left: 50px !important;//二级导航的缩进
+    &.is-active { //选中的导航列
+        background-color: rgba(245,108,108,0.2) !important;
+    }
+}
+//修改一级菜单样式
+li.el-submenu {
+    &.is-active.is-opened .el-submenu__title {background-color: $mainColor !important;}
+}
