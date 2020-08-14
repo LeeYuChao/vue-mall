@@ -1,15 +1,8 @@
-/**
- * 列表
- */
+import service from '@/utils/request';
 
- /**
- * 新增
- */
-
- /**
- * 编辑
- */
-
- /**
- * 删除
- */
+export function TreeMenus(){
+    return service.request({
+        method: 'get',
+        url: '/menu/treeMenus'
+    })
+  }

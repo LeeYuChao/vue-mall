@@ -57,19 +57,20 @@ module.exports = {
     open: false,//  process.platform === "darwin"  编译完成是否打开网页
     host: "0.0.0.0",//指定使用地址，默认 localhost,0.0.0.0代表可以被外界访问
     // host: '127.0.0.1',
-    port: 8080,//访问端口
+    port: 8081,//访问端口
     https: false,//编译失败时刷新页面
     hot: true,//开启热加载
     hotOnly: false,
     proxy: {
       "/api": {
           /* 目标代理服务器地址 */
-          target: "http://192.168.31.203:8888", //
+          target: "http://localhost:8080", //
           /* 允许跨域 */
           changeOrigin: true,
-          ws: false,
+          ws: true,
           pathRewrite: {
-              "^/api": "/api"
+              //"^/api": "/api"
+              "^/api": ""
           }
       }
     },
